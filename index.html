@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Environmental Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Same CSS you gave (no change needed) */
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #1e3c72, #2a5298); color: white; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: rgba(0,0,0,0.2); }
+        header h1 { margin: 0; font-size: 2em; }
+        .admin-btn {
+            background: #ffffff20;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .admin-btn:hover {
+            background: #ffffff40;
+        }
+        .dashboard { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .card h2 { font-size: 1.2em; color: #cde7ff; }
+        .value { font-size: 2.2em; margin: 10px 0; }
+        .stats { font-size: 0.9em; margin-top: 10px; }
+        canvas {
+            background: white;
+            border-radius: 16px;
+            padding: 10px;
+            margin: 20px auto;
+            display: block;
+            max-width: 90vw;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Environmental Dashboard</h1>
+        <a class="admin-btn" href="/login">Admin</a>
+    </header>
+
+    <div class='dashboard'>
+        <div class='card'>
+            <h2>Temperature (°C)</h2>
+            <p class='value' id='temp'>--</p>
+            <div class='stats'>
+                Min: <span id='minTemp'>--</span><br>
+                Max: <span id='maxTemp'>--</span><br>
+                Avg: <span id='avgTemp'>--</span>
+            </div>
+        </div>
+        <div class='card'>
+            <h2>Humidity (%)</h2>
+            <p class='value' id='hum'>--</p>
+            <div class='stats'>
+                Min: <span id='minHum'>--</span><br>
+                Max: <span id='maxHum'>--</span><br>
+                Avg: <span id='avgHum'>--</span>
+            </div>
+        </div>
+    </div>
+
+    <canvas id='lineChart'></canvas>
+
+    <script>
+        const tempEl = document.getElementById('temp');
+        const humEl = document.getElementById('hum');
+        const minTempEl = document.getElementById('minTemp');
+        const maxTempEl = document.getElementById('maxTemp');
+        const avgTempEl = document.getElementById('avgTemp');
+        const minHumEl = document.getElementById('minHum');
+        const maxHumEl = document.getElementById('maxHum');
+        const avgHumEl = document.getElementById('avgHum');
+        const ctx = document.getElementById('lineChart').getContext('2d');
+
+        const NGROK_URL = "https://da8c-175-107-221-10.ngrok-free.app";  // <- Set your Ngrok URL here
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        borderColor: '#ff6384',
+                        data: [],
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'Humidity (%)',
+                        borderColor: '#36a2eb',
+                        data: [],
+                        tension: 0.3,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        function fetchData() {
+            fetch(`${NGROK_URL}/data`)  // <-- corrected
+                .then(res => res.json())
+                .then(data => {
+                    tempEl.textContent = data.temperature.toFixed(2);
+                    humEl.textContent = data.humidity.toFixed(2);
+                    minTempEl.textContent = data.minTemp.toFixed(2);
+                    maxTempEl.textContent = data.maxTemp.toFixed(2);
+                    avgTempEl.textContent = data.avgTemp.toFixed(2);
+                    minHumEl.textContent = data.minHum.toFixed(2);
+                    maxHumEl.textContent = data.maxHum.toFixed(2);
+                    avgHumEl.textContent = data.avgHum.toFixed(2);
+
+                    const timestamp = new Date().toLocaleTimeString().slice(0,8);
+                    chart.data.labels.push(timestamp);
+                    chart.data.datasets[0].data.push(data.temperature);
+                    chart.data.datasets[1].data.push(data.humidity);
+
+                    if (chart.data.labels.length > 20) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                        chart.data.datasets[1].data.shift();
+                    }
+
+                    chart.update();
+                })
+                .catch(err => console.error('Error fetching data:', err));
+        }
+
+        setInterval(fetchData, 5000);
+        fetchData();
+    </script>
+</body>
+</html>
