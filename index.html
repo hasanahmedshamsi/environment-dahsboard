@@ -6,7 +6,6 @@
     <title>Environmental Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Same CSS you gave (no change needed) */
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(to right, #1e3c72, #2a5298); color: white; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: rgba(0,0,0,0.2); }
         header h1 { margin: 0; font-size: 2em; }
@@ -19,9 +18,7 @@
             text-decoration: none;
             transition: 0.3s;
         }
-        .admin-btn:hover {
-            background: #ffffff40;
-        }
+        .admin-btn:hover { background: #ffffff40; }
         .dashboard { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px; }
         .card {
             background: rgba(255, 255, 255, 0.1);
@@ -44,6 +41,7 @@
         }
     </style>
 </head>
+
 <body>
     <header>
         <h1>Environmental Dashboard</h1>
@@ -84,7 +82,7 @@
         const avgHumEl = document.getElementById('avgHum');
         const ctx = document.getElementById('lineChart').getContext('2d');
 
-        const NGROK_URL = "https://ca64-175-107-221-10.ngrok-free.app";  // <- Set your Ngrok URL here
+        const NGROK_URL = "https://ca64-175-107-221-10.ngrok-free.app";  // <-- your correct NGROK URL
 
         const chart = new Chart(ctx, {
             type: 'line',
@@ -109,14 +107,12 @@
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
+                scales: { y: { beginAtZero: true } }
             }
         });
 
         function fetchData() {
-            fetch(`${NGROK_URL}/data`)  // <-- corrected
+            fetch(`${NGROK_URL}/data`)  // <-- fixed fetch
                 .then(res => res.json())
                 .then(data => {
                     tempEl.textContent = data.temperature.toFixed(2);
@@ -128,7 +124,7 @@
                     maxHumEl.textContent = data.maxHum.toFixed(2);
                     avgHumEl.textContent = data.avgHum.toFixed(2);
 
-                    const timestamp = new Date().toLocaleTimeString().slice(0,8);
+                    const timestamp = new Date().toLocaleTimeString();
                     chart.data.labels.push(timestamp);
                     chart.data.datasets[0].data.push(data.temperature);
                     chart.data.datasets[1].data.push(data.humidity);
@@ -138,13 +134,12 @@
                         chart.data.datasets[0].data.shift();
                         chart.data.datasets[1].data.shift();
                     }
-
                     chart.update();
                 })
                 .catch(err => console.error('Error fetching data:', err));
         }
 
-        setInterval(fetchData, 5000);
+        setInterval(fetchData, 5000);  // fetch every 5 seconds
         fetchData();
     </script>
 </body>
